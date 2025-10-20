@@ -1,5 +1,5 @@
 "use client";
-import { ChangeEvent, FC, useState } from "react";
+import { ChangeEvent, FC, useState, useRef, useEffect } from "react";
 import { todoType } from "@/types/todoType";
 
 interface Props {
@@ -26,6 +26,18 @@ const Todo: FC<Props> = ({
 
   // State for handling loading states
   const [isLoading, setIsLoading] = useState(false);
+
+  // Ref for the input element
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Focus input when entering edit mode
+  useEffect(() => {
+    if (editing && inputRef.current) {
+      inputRef.current.focus();
+      // Optional: Select all text for easier editing
+      inputRef.current.select();
+    }
+  }, [editing]);
 
   // Event handler for text input change
   const handleTextChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -106,6 +118,7 @@ const Todo: FC<Props> = ({
       />
       {/* Input field for todo text */}
       <input
+        ref={inputRef}
         type="text"
         value={text}
         onChange={handleTextChange}
