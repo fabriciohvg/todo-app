@@ -1,5 +1,5 @@
 export type todoType = {
-  id: number;
+  id: string; // UUID is represented as string in TypeScript
   text: string;
   done: boolean;
 };

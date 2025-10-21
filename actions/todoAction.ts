@@ -12,8 +12,8 @@ type ActionResponse<T = void> =
   | { success: false; error: string };
 
 // Zod validation schemas
-const todoIdSchema = z.number().int().positive({
-  message: "Todo ID must be a positive integer",
+const todoIdSchema = z.string().uuid({
+  message: "Todo ID must be a valid UUID",
 });
 
 const todoTextSchema = z
@@ -23,7 +23,6 @@ const todoTextSchema = z
   .max(500, { message: "Todo text must be less than 500 characters" });
 
 const addTodoSchema = z.object({
-  id: todoIdSchema,
   text: todoTextSchema,
 });
 
@@ -43,60 +42,56 @@ export const getData = async (): Promise<ActionResponse<typeof todo.$inferSelect
     const data = await db.select().from(todo);
     return { success: true, data };
   } catch (error) {
+    // Log full error details server-side for debugging
     console.error("Error fetching todos:", error);
+
+    // Return generic error message to client (don't expose internal details)
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to fetch todos",
+      error: "Unable to load todos. Please try again later.",
     };
   }
 };
 
-export const addTodo = async (id: number, text: string): Promise<ActionResponse> => {
+export const addTodo = async (text: string): Promise<ActionResponse<typeof todo.$inferSelect>> => {
   try {
     // Validate input with Zod
-    const validation = addTodoSchema.safeParse({ id, text });
+    const validation = addTodoSchema.safeParse({ text });
 
     if (!validation.success) {
+      // Validation errors are safe to show (user input issues)
       const errorMessages = validation.error.issues.map((err) => err.message).join(", ");
       return { success: false, error: errorMessages };
     }
 
-    const { id: validId, text: validText } = validation.data;
+    const { text: validText } = validation.data;
 
-    // Check if todo with same ID already exists
-    const existing = await db
-      .select()
-      .from(todo)
-      .where(eq(todo.id, validId))
-      .limit(1);
-
-    if (existing.length > 0) {
-      return { success: false, error: "Todo with this ID already exists" };
-    }
-
-    // Insert todo
-    await db.insert(todo).values({
-      id: validId,
+    // Insert todo and return the created record with auto-generated UUID
+    const [newTodo] = await db.insert(todo).values({
       text: validText,
-    });
+    }).returning();
 
     revalidatePath("/");
-    return { success: true, data: undefined };
+    return { success: true, data: newTodo };
   } catch (error) {
+    // Log full error details server-side for debugging
     console.error("Error adding todo:", error);
+
+    // Return generic error message to client (don't expose database/internal details)
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to add todo",
+      error: "Unable to create todo. Please try again.",
     };
   }
 };
 
-export const deleteTodo = async (id: number): Promise<ActionResponse> => {
+export const deleteTodo = async (id: string): Promise<ActionResponse> => {
   try {
     // Validate input with Zod
     const validation = todoIdOnlySchema.safeParse({ id });
 
     if (!validation.success) {
+      // Validation errors are safe to show
       const errorMessages = validation.error.issues.map((err) => err.message).join(", ");
       return { success: false, error: errorMessages };
     }
@@ -111,7 +106,7 @@ export const deleteTodo = async (id: number): Promise<ActionResponse> => {
       .limit(1);
 
     if (existing.length === 0) {
-      return { success: false, error: "Todo not found" };
+      return { success: false, error: "Todo not found." };
     }
 
     // Delete todo
@@ -120,20 +115,24 @@ export const deleteTodo = async (id: number): Promise<ActionResponse> => {
     revalidatePath("/");
     return { success: true, data: undefined };
   } catch (error) {
+    // Log full error details server-side for debugging
     console.error("Error deleting todo:", error);
+
+    // Return generic error message to client
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to delete todo",
+      error: "Unable to delete todo. Please try again.",
     };
   }
 };
 
-export const toggleTodo = async (id: number): Promise<ActionResponse> => {
+export const toggleTodo = async (id: string): Promise<ActionResponse> => {
   try {
     // Validate input with Zod
     const validation = todoIdOnlySchema.safeParse({ id });
 
     if (!validation.success) {
+      // Validation errors are safe to show
       const errorMessages = validation.error.issues.map((err) => err.message).join(", ");
       return { success: false, error: errorMessages };
     }
@@ -148,7 +147,7 @@ export const toggleTodo = async (id: number): Promise<ActionResponse> => {
       .limit(1);
 
     if (existing.length === 0) {
-      return { success: false, error: "Todo not found" };
+      return { success: false, error: "Todo not found." };
     }
 
     // Toggle todo
@@ -160,20 +159,24 @@ export const toggleTodo = async (id: number): Promise<ActionResponse> => {
     revalidatePath("/");
     return { success: true, data: undefined };
   } catch (error) {
+    // Log full error details server-side for debugging
     console.error("Error toggling todo:", error);
+
+    // Return generic error message to client
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to toggle todo",
+      error: "Unable to update todo. Please try again.",
     };
   }
 };
 
-export const editTodo = async (id: number, text: string): Promise<ActionResponse> => {
+export const editTodo = async (id: string, text: string): Promise<ActionResponse> => {
   try {
     // Validate input with Zod
     const validation = editTodoSchema.safeParse({ id, text });
 
     if (!validation.success) {
+      // Validation errors are safe to show
       const errorMessages = validation.error.issues.map((err) => err.message).join(", ");
       return { success: false, error: errorMessages };
     }
@@ -188,7 +191,7 @@ export const editTodo = async (id: number, text: string): Promise<ActionResponse
       .limit(1);
 
     if (existing.length === 0) {
-      return { success: false, error: "Todo not found" };
+      return { success: false, error: "Todo not found." };
     }
 
     // Update todo
@@ -197,10 +200,13 @@ export const editTodo = async (id: number, text: string): Promise<ActionResponse
     revalidatePath("/");
     return { success: true, data: undefined };
   } catch (error) {
+    // Log full error details server-side for debugging
     console.error("Error editing todo:", error);
+
+    // Return generic error message to client
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to edit todo",
+      error: "Unable to update todo. Please try again.",
     };
   }
 };

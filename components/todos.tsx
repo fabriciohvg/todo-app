@@ -1,4 +1,5 @@
 "use client";
+import React from "react";
 import { FC, useState } from "react";
 import { todoType } from "@/types/todoType";
 import Todo from "./todo";
@@ -29,24 +30,19 @@ const Todos: FC<Props> = ({ todos }) => {
 
   // Function to create a new todo item
   const createTodo = async (text: string) => {
-    const id = (todoItems.at(-1)?.id || 0) + 1;
+    // Call server action to get the database-generated UUID
+    const result = await addTodo(text);
 
-    // Optimistic update
-    const newTodo = { id, text, done: false };
-    setTodoItems((prev) => [...prev, newTodo]);
-
-    // Call server action
-    const result = await addTodo(id, text);
-
-    if (!result.success) {
-      // Rollback on error
-      setTodoItems((prev) => prev.filter((todo) => todo.id !== id));
+    if (result.success) {
+      // Optimistic update - immediately add the new todo with real UUID
+      setTodoItems((prev) => [...prev, result.data]);
+    } else {
       showError(result.error);
     }
   };
 
   // Function to change the text of a todo item
-  const changeTodoText = async (id: number, text: string) => {
+  const changeTodoText = async (id: string, text: string) => {
     // Store original state for rollback
     const originalTodos = [...todoItems];
 
@@ -66,7 +62,7 @@ const Todos: FC<Props> = ({ todos }) => {
   };
 
   // Function to toggle the "done" status of a todo item
-  const toggleIsTodoDone = async (id: number) => {
+  const toggleIsTodoDone = async (id: string) => {
     // Store original state for rollback
     const originalTodos = [...todoItems];
 
@@ -88,7 +84,7 @@ const Todos: FC<Props> = ({ todos }) => {
   };
 
   // Function to delete a todo item
-  const deleteTodoItem = async (id: number) => {
+  const deleteTodoItem = async (id: string) => {
     // Store original state for rollback
     const originalTodos = [...todoItems];
 

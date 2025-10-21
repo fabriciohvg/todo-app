@@ -1,4 +1,4 @@
-import { integer, pgTable, varchar, text, boolean } from "drizzle-orm/pg-core";
+import { integer, pgTable, varchar, text, boolean, uuid } from "drizzle-orm/pg-core";
 
 export const usersTable = pgTable("users", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
@@ -7,7 +7,7 @@ export const usersTable = pgTable("users", {
 });
 
 export const todo = pgTable("todo", {
-  id: integer("id").primaryKey(),
+  id: uuid("id").primaryKey().defaultRandom(),
   text: text("text").notNull(),
   done: boolean("done").default(false).notNull(),
 });

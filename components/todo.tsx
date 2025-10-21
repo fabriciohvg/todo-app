@@ -4,9 +4,9 @@ import { todoType } from "@/types/todoType";
 
 interface Props {
   todo: todoType;
-  changeTodoText: (id: number, text: string) => Promise<void>;
-  toggleIsTodoDone: (id: number) => Promise<void>;
-  deleteTodoItem: (id: number) => Promise<void>;
+  changeTodoText: (id: string, text: string) => Promise<void>;
+  toggleIsTodoDone: (id: string) => Promise<void>;
+  deleteTodoItem: (id: string) => Promise<void>;
 }
 
 const Todo: FC<Props> = ({
@@ -53,7 +53,7 @@ const Todo: FC<Props> = ({
 
     try {
       await toggleIsTodoDone(todo.id);
-    } catch (error) {
+    } catch {
       // Rollback on error
       setIsDone((prev) => !prev);
     } finally {
@@ -107,7 +107,11 @@ const Todo: FC<Props> = ({
 
   // Rendering the Todo component
   return (
-    <div className={`flex items-center gap-2 p-4 border-gray-200 border-solid border rounded-lg ${isLoading ? "opacity-50 pointer-events-none" : ""}`}>
+    <div
+      className={`flex items-center gap-2 p-4 border-gray-200 border-solid border rounded-lg ${
+        isLoading ? "opacity-50 pointer-events-none" : ""
+      }`}
+    >
       {/* Checkbox for marking the todo as done */}
       <input
         type="checkbox"
