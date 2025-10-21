@@ -34,16 +34,21 @@ export default function AvatarUploadPage() {
           setBlob(newBlob);
         }}
       >
-        <input
-          className="border rounded border-gray-300 p-1"
-          name="file"
-          ref={inputFileRef}
-          type="file"
-          accept="image/jpeg, image/png, image/webp"
-          required
-        />
+        <label className="border rounded border-gray-700 py-1 px-4 hover:bg-gray-100 hover:text-black dark:border-gray-100 cursor-pointer">
+          Upload Avatar
+          <input
+            className="opacity-0 absolute inset-0 cursor-pointer"
+            name="file"
+            ref={inputFileRef}
+            type="file"
+            hidden
+            accept="image/jpeg, image/png, image/webp"
+            required
+          />
+        </label>
+
         <button
-          className="border rounded border-green-700 py-1 px-4 bg-green-200 cursor-pointer dark:text-green-950"
+          className="border rounded border-green-700 py-1 px-4 bg-green-200 cursor-pointer hover:bg-green-100 dark:text-green-950"
           type="submit"
         >
           Upload
