@@ -30,6 +30,12 @@ const Todo: FC<Props> = ({
   // Ref for the input element
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Sync local state when todo prop changes (e.g., after page reload or parent update)
+  useEffect(() => {
+    setIsDone(todo.done);
+    setText(todo.text);
+  }, [todo.done, todo.text]);
+
   // Focus input when entering edit mode
   useEffect(() => {
     if (editing && inputRef.current) {
@@ -129,7 +135,7 @@ const Todo: FC<Props> = ({
         readOnly={!editing}
         disabled={isLoading}
         className={`${
-          todo.done ? "line-through" : ""
+          isDone ? "line-through" : ""
         } outline-none read-only:border-transparent focus:border border-gray-200 rounded px-2 py-1 w-full disabled:opacity-50`}
       />
       {/* Action buttons for editing, saving, canceling, and deleting */}
