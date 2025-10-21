@@ -1,6 +1,10 @@
 import { getData } from "@/actions/todoAction";
 import Todos from "@/components/todos";
 
+// Disable caching for this page - always fetch fresh data
+export const dynamic = 'force-dynamic';
+// Alternative: export const revalidate = 0;
+
 export default async function Home() {
   const result = await getData();
 
